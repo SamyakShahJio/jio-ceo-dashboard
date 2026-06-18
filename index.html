@@ -181,6 +181,9 @@ table.tbl th{text-align:left; font-size:10.5px; letter-spacing:.05em; text-trans
 table.tbl td{padding:13px 12px; border-bottom:1px solid var(--brd-2); vertical-align:top}
 table.tbl tr:last-child td{border-bottom:0}
 table.tbl tr:hover td{background:rgba(255,255,255,.02)}
+table.tbl tfoot td{border-top:1px solid var(--brd); border-bottom:0; padding-top:13px; color:#fff; font-weight:700}
+table.tbl tfoot td:first-child{color:var(--muted); text-transform:uppercase; font-size:11px; letter-spacing:.05em; font-weight:600}
+table.tbl tfoot tr:hover td{background:transparent}
 .init-name{font-weight:600; color:var(--text)}
 .rk{color:var(--muted); font-size:12.5px; max-width:330px} .rk.none{color:var(--muted-2)}
 .num-r{font-family:"JetBrains Mono"; font-weight:600; text-align:right; white-space:nowrap; color:var(--text)}
@@ -255,7 +258,7 @@ table.tbl tr:hover td{background:rgba(255,255,255,.02)}
   .period button{flex:0 0 auto; padding:9px 15px}
   .grid-2,.grid-2-1,.meet-grid,.org-grid{grid-template-columns:1fr}
   table.dt{min-width:392px}
-  table.tbl{min-width:680px}
+  table.tbl{min-width:640px}
   table.dt th,table.dt td{padding:9px 8px}
   table.tbl th,table.tbl td{padding:11px 9px}
   .rk{max-width:none}
@@ -559,21 +562,35 @@ function render(){
   app.appendChild(secA);
 
   /* ===== SECTION B : initiatives ===== */
-  const secB=el(`<section class="section"><div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3>
-    <span class="hint">live status · roadblocks &amp; decisions · revenue plan vs actual</span></div></section>`);
+  const secB=el(`<section class="section"></section>`);
+  const headB=el(`<div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3>
+    <span class="hint">live status · roadblocks &amp; decisions · revenue plan vs actual</span><span class="spacer"></span></div>`);
+  const toggleB=el(`<div class="period" role="group" aria-label="Time granularity (initiatives)"></div>`);
+  Object.keys(PERIODS).forEach(k=>{const b=el(`<button data-period="${k}" aria-pressed="${state.period===k}">${PERIODS[k].label}</button>`);b.onclick=()=>{state.period=k;render();};toggleB.appendChild(b);});
+  headB.appendChild(toggleB); secB.appendChild(headB);
+  secB.appendChild(el(`<div class="cap">Revenue plan vs actual shown for · <b>${p.label}</b> (${p.head}). Initiative-level figures re-scale with the toggle.</div>`));
   const cardB=el(`<div class="panel"></div>`);
-  const rowsB=a.initiatives.map(i=>`<tr>
-    <td><div class="init-name">${i.n}</div></td>
-    <td><span class="chip ${i.s}"><span class="d"></span>${STATUS_LABEL[i.s]}</span></td>
-    <td style="text-align:center"><span class="health ${i.h}"></span></td>
-    <td><div class="rk ${i.rk.startsWith('None')?'none':''}">${i.rk}</div></td>
-    <td class="num-r">${i.plan?fmt(i.plan):'—'}</td>
-    <td class="num-r">${i.act?fmt(i.act):'—'}</td>
-    <td class="num-r">${i.plan&&i.act?deltaPill(i.act,i.plan):'<span style="color:var(--muted-2)">—</span>'}</td></tr>`).join("");
+  let tPlan=0, tAct=0;
+  const rowsB=a.initiatives.map((i,idx)=>{
+    const hasPlan=i.plan>0, hasAct=i.act>0; let pPlan=0,pAct=0;
+    if(hasPlan){const s=series(seed(a)+700+idx,3,state.period,i.act,i.plan,(i.act/i.plan)-1); pPlan=s.headPlan; pAct=hasAct?s.headActual:0;}
+    if(hasPlan) tPlan+=pPlan; if(hasAct) tAct+=pAct;
+    return `<tr>
+      <td><div class="init-name">${i.n}</div></td>
+      <td><span class="chip ${i.s}"><span class="d"></span>${STATUS_LABEL[i.s]}</span></td>
+      <td><div class="rk ${i.rk.startsWith('None')?'none':''}">${i.rk}</div></td>
+      <td class="num-r">${hasPlan?fmt(pPlan):'—'}</td>
+      <td class="num-r">${hasAct?fmt(pAct):'—'}</td>
+      <td class="num-r">${hasPlan&&hasAct?deltaPill(pAct,pPlan):'<span style="color:var(--muted-2)">—</span>'}</td></tr>`;
+  }).join("");
   cardB.appendChild(el(`<div class="table-x"><table class="tbl"><thead><tr>
-    <th>Initiative</th><th>Status</th><th style="text-align:center">Health</th><th>Roadblocks / decisions</th>
+    <th>Initiative</th><th>Status</th><th>Roadblocks / decisions</th>
     <th class="th-r">Plan ₹Cr</th><th class="th-r">Actual ₹Cr</th><th class="th-r">Var.</th></tr></thead>
-    <tbody>${rowsB}</tbody></table></div>`));
+    <tbody>${rowsB}</tbody>
+    <tfoot><tr><td colspan="3">Total — ${p.label} (${p.head})</td>
+      <td class="num-r">${fmt(tPlan)}</td><td class="num-r">${fmt(tAct)}</td>
+      <td class="num-r">${tPlan?deltaPill(tAct,tPlan):'—'}</td></tr></tfoot>
+  </table></div>`));
   secB.appendChild(cardB); app.appendChild(secB);
 
   /* ===== SECTION C : org ===== */
