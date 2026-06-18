@@ -261,8 +261,8 @@ table.tbl tfoot tr:hover td{background:transparent}
   .section-head{align-items:flex-start; row-gap:2px}
   .section-head .hint{flex-basis:100%; order:5}
   .period-bar{width:100%; margin-top:4px}
-  .period{width:100%; overflow-x:auto; flex-wrap:nowrap}
-  .period button{flex:0 0 auto; padding:9px 15px}
+  .period{width:100%; flex-wrap:wrap; gap:4px}
+  .period button{flex:1 1 auto; text-align:center; padding:9px 8px}
   .grid-2,.grid-2-1,.meet-grid,.org-grid{grid-template-columns:1fr}
   table.dt{min-width:392px}
   table.tbl{min-width:640px}
@@ -277,6 +277,9 @@ table.tbl tfoot tr:hover td{background:transparent}
 @media (max-width:400px){
   .kpis{grid-template-columns:1fr}
   .area-title h2{font-size:20px}
+  .theme-btn .tl{display:none}
+  .theme-btn{padding:7px 9px}
+  .topbar-inner{gap:8px 10px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
 
@@ -564,7 +567,7 @@ function render(){
   const escList = state.tab==="digital" ? ESC.digital[state.sub] : ESC[state.tab];
   if(escList && escList.length){
     app.appendChild(el(`<div class="panel escal">
-      <div class="eh"><span class="etag">!</span><h3>Key escalations / OTDs to highlight</h3><span class="ehint">OTD = one-time decision</span></div>
+      <div class="eh"><span class="etag">!</span><h3>Key escalations / OTDs to highlight</h3></div>
       <ul>${escList.map(x=>`<li>${x}</li>`).join("")}</ul></div>`));
   }
 
@@ -592,9 +595,7 @@ function render(){
 
   /* ===== SECTION A : performance (tabular + own period toggle) ===== */
   const secA=el(`<section class="section"></section>`);
-  secA.appendChild(el(`<div class="section-head"><span class="tag">A</span><h3>Performance metrics</h3>
-    <span class="hint">AOP plan vs actual · ${p.label.toLowerCase()} view</span></div>`));
-  secA.appendChild(el(`<div class="cap">Granularity · <b>${p.label}</b> — ${p.caption}. Latest period highlighted; newest first.</div>`));
+  secA.appendChild(el(`<div class="section-head"><span class="tag">A</span><h3>Performance Metrics</h3></div>`));
 
   const gridA=el(`<div class="grid-2"></div>`);
   gridA.appendChild(perfTable("Revenue", "₹ Cr", rev, 0, p.col));
@@ -605,9 +606,7 @@ function render(){
 
   /* ===== SECTION B : initiatives ===== */
   const secB=el(`<section class="section"></section>`);
-  secB.appendChild(el(`<div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3>
-    <span class="hint">live status · roadblocks &amp; decisions · revenue plan vs actual</span></div>`));
-  secB.appendChild(el(`<div class="cap">Revenue plan vs actual shown for · <b>${p.label}</b> (${p.head}). Figures re-scale with the <b>View</b> selector at the top.</div>`));
+  secB.appendChild(el(`<div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3></div>`));
   const cardB=el(`<div class="panel"></div>`);
   let tPlan=0, tAct=0;
   const rowsB=a.initiatives.map((i,idx)=>{
@@ -633,8 +632,7 @@ function render(){
   secB.appendChild(cardB); app.appendChild(secB);
 
   /* ===== SECTION C : org ===== */
-  const secC=el(`<section class="section"><div class="section-head"><span class="tag">C</span><h3>Organisation</h3>
-    <span class="hint">leadership coverage · resource gap</span></div></section>`);
+  const secC=el(`<section class="section"><div class="section-head"><span class="tag">C</span><h3>Organization</h3></div></section>`);
   const gridC=el(`<div class="grid-2-1"></div>`);
   const lc=el(`<div class="panel"><div class="dt-title"><span class="t">Key leadership positions</span><span class="u">name · status</span></div><div class="org-grid"></div></div>`);
   const og=lc.querySelector(".org-grid");
@@ -658,7 +656,7 @@ function render(){
   gridC.appendChild(lc); gridC.appendChild(rc); secC.appendChild(gridC); app.appendChild(secC);
 
   /* ===== SECTION D : meetings ===== */
-  const secD=el(`<section class="section"><div class="section-head"><span class="tag">D</span><h3>Leadership meetings &amp; key decisions — this week</h3></div></section>`);
+  const secD=el(`<section class="section"><div class="section-head"><span class="tag">D</span><h3>Leadership meeting &amp; key decisions</h3></div></section>`);
   const gridD=el(`<div class="meet-grid"></div>`);
   a.meetings.forEach(m=>{gridD.appendChild(el(`<div class="panel meet">
     <div class="meet-top"><span class="mt">${m.t}</span><span class="md">${m.d}</span></div>
