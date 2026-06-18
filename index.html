@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jio · Executive Performance Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Jio brand-derived palette */
+  --jio:#0A74D6; --jio-deep:#005AAC; --jio-bright:#2E9BFF; --cyan:#1ED2F0; --cyan-deep:#0FB6D6;
+  --bg0:#040C1B; --bg1:#071933; --bg2:#0A1F3D;
+  --panel:rgba(255,255,255,.045); --panel-2:rgba(255,255,255,.025);
+  --brd:rgba(120,170,255,.15); --brd-2:rgba(120,170,255,.09); --hi:rgba(255,255,255,.06);
+  --text:#EAF1FB; --muted:#93A6C6; --muted-2:#65789A;
+  --green:#2DD58A; --green-bg:rgba(45,213,138,.12);
+  --amber:#FFB23E; --amber-bg:rgba(255,178,62,.13);
+  --red:#FF647C;   --red-bg:rgba(255,100,124,.13);
+  --grad:linear-gradient(90deg,var(--jio),var(--cyan));
+  --r:16px; --r-sm:11px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--text);
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:14px; line-height:1.45;
+  background:
+    radial-gradient(1100px 620px at 82% -8%, rgba(30,210,240,.13), transparent 60%),
+    radial-gradient(1000px 700px at 8% 4%, rgba(10,116,214,.18), transparent 55%),
+    linear-gradient(180deg,var(--bg0) 0%, var(--bg1) 55%, var(--bg0) 100%);
+  background-attachment:fixed; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Space Grotesk",Inter,sans-serif}
+.mono{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+header.topbar{position:sticky; top:0; z-index:40;
+  background:linear-gradient(180deg, rgba(5,14,30,.92), rgba(7,25,49,.78));
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--brd);}
+.topbar::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px;
+  background:var(--grad); opacity:.6}
+.topbar-inner{max-width:1480px; margin:0 auto; padding:13px 28px; display:flex; align-items:center; gap:20px}
+.brand{display:flex; align-items:center; gap:14px; min-width:0}
+.mark{width:48px; height:48px; flex:none; border-radius:50%; filter:drop-shadow(0 4px 16px rgba(10,116,214,.6))}
+.brand-meta{display:flex; flex-direction:column; line-height:1.2; min-width:0}
+.brand-meta .office{font-family:"Space Grotesk"; font-weight:600; font-size:15px; letter-spacing:.2px}
+.brand-meta .who{font-size:12px; color:var(--muted)}
+.topbar-spacer{flex:1}
+.fybadge{font-family:"Space Grotesk"; font-weight:600; font-size:12px; color:var(--text);
+  background:rgba(46,155,255,.12); border:1px solid var(--brd); padding:7px 13px; border-radius:999px; white-space:nowrap}
+.live{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); white-space:nowrap}
+.dot-live{width:8px;height:8px;border-radius:50%;background:var(--cyan); box-shadow:0 0 12px var(--cyan)}
+.dot-live{animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(30,210,240,.55)}70%{box-shadow:0 0 0 8px rgba(30,210,240,0)}100%{box-shadow:0 0 0 0 rgba(30,210,240,0)}}
+.clock{font-family:"JetBrains Mono"; color:var(--text); font-weight:600}
+
+/* ---------- tabs ---------- */
+nav.tabs{position:sticky; top:73px; z-index:30;
+  background:rgba(6,18,38,.72); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--brd-2)}
+.tabs-inner{max-width:1480px; margin:0 auto; padding:0 28px; display:flex; gap:6px}
+.tab{font-family:"Space Grotesk"; font-weight:600; font-size:14px; color:var(--muted); background:transparent;
+  border:0; padding:15px 18px 13px; cursor:pointer; border-bottom:2px solid transparent; transition:.18s; white-space:nowrap; position:relative}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:#fff}
+.tab[aria-selected="true"]::after{content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:2px;
+  background:var(--grad); border-radius:2px; box-shadow:0 0 10px rgba(30,210,240,.7)}
+
+/* ---------- layout ---------- */
+main{max-width:1480px; margin:0 auto; padding:24px 28px 64px}
+.area-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:2px 0 18px; flex-wrap:wrap}
+.area-title .eyebrow{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--cyan); font-weight:600}
+.area-title h2{margin:3px 0 0; font-size:27px; font-weight:700; letter-spacing:-.4px}
+
+/* sub-pills */
+.subnav{display:flex; gap:9px; flex-wrap:wrap; margin:-2px 0 20px}
+.pill{font-family:"Space Grotesk"; font-weight:600; font-size:13px; color:var(--muted);
+  background:var(--panel); border:1px solid var(--brd-2); padding:8px 15px; border-radius:999px; cursor:pointer; transition:.16s}
+.pill:hover{color:var(--text); border-color:var(--brd)}
+.pill[aria-pressed="true"]{color:#fff; border-color:transparent; background:linear-gradient(90deg, rgba(10,116,214,.55), rgba(30,210,240,.4));
+  box-shadow:0 0 0 1px rgba(30,210,240,.4), 0 6px 18px rgba(10,116,214,.3)}
+
+/* panels (glass) */
+.panel{background:var(--panel); border:1px solid var(--brd-2); border-radius:var(--r);
+  box-shadow:0 1px 0 var(--hi) inset, 0 18px 40px rgba(2,8,20,.35); padding:18px; position:relative; overflow:hidden}
+.panel::before{content:""; position:absolute; left:0; top:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(120,170,255,.35),transparent)}
+
+/* KPI strip */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px}
+.kpi{padding:16px 17px}
+.kpi .label{font-size:11.5px; color:var(--muted); font-weight:600; letter-spacing:.02em}
+.kpi .v{font-family:"JetBrains Mono"; font-weight:700; font-size:26px; margin-top:9px; letter-spacing:-.5px; color:#fff}
+.kpi .v .u{font-size:13px; color:var(--muted-2); font-weight:600; margin-left:3px}
+.kpi .sub{font-size:12px; color:var(--muted); margin-top:5px; display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+
+/* sections */
+.section{margin:30px 0 0}
+.section-head{display:flex; align-items:center; gap:11px; margin:0 0 14px; flex-wrap:wrap}
+.section-head .tag{font-family:"Space Grotesk"; font-weight:700; font-size:12px; color:#04101f;
+  background:var(--grad); width:25px; height:25px; border-radius:8px; display:grid; place-items:center;
+  box-shadow:0 0 14px rgba(30,210,240,.45)}
+.section-head h3{margin:0; font-size:16px; font-weight:600; letter-spacing:-.2px}
+.section-head .hint{font-size:12px; color:var(--muted-2)}
+.section-head .spacer{flex:1}
+.escal{margin-bottom:20px; padding:15px 18px 16px; border:1px solid rgba(255,178,62,.30);
+  background:linear-gradient(90deg, rgba(255,178,62,.12), rgba(255,100,124,.05) 60%, transparent)}
+.escal::before{background:linear-gradient(90deg,var(--amber),var(--red))}
+.escal .eh{display:flex; align-items:center; gap:11px; margin-bottom:11px; flex-wrap:wrap}
+.escal .etag{font-family:"Space Grotesk"; font-weight:800; font-size:14px; color:#1a0c00;
+  background:linear-gradient(90deg,var(--amber),#FF8A4E); width:25px; height:25px; border-radius:8px;
+  display:grid; place-items:center; box-shadow:0 0 14px rgba(255,178,62,.5)}
+.escal h3{margin:0; font-size:16px; font-weight:600; letter-spacing:-.2px}
+.escal .ehint{font-size:11.5px; color:var(--muted-2); margin-left:auto}
+.escal ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:9px}
+.escal li{font-size:13px; color:var(--text); display:flex; gap:10px; line-height:1.45}
+.escal li::before{content:"▸"; color:var(--amber); font-weight:700; flex:none}
+
+/* period toggle (in performance section) */
+.period{display:flex; gap:3px; background:var(--panel-2); padding:4px; border-radius:11px; border:1px solid var(--brd-2)}
+.period button{font-family:"Space Grotesk"; font-weight:600; font-size:12.5px; color:var(--muted);
+  background:transparent; border:0; padding:7px 13px; border-radius:8px; cursor:pointer; transition:.16s}
+.period button:hover{color:var(--text)}
+.period button[aria-pressed="true"]{color:#fff; background:linear-gradient(90deg, rgba(10,116,214,.6), rgba(30,210,240,.45));
+  box-shadow:0 0 12px rgba(30,210,240,.35)}
+
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.grid-2-1{display:grid; grid-template-columns:1.35fr 1fr; gap:16px}
+.cap{font-size:12.5px; color:var(--muted); margin:-6px 0 14px}
+.cap b{color:var(--text); font-weight:600}
+
+/* data tables */
+.dt-wrap{margin-top:2px}
+.dt-title{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:13px}
+.dt-title .t{font-family:"Space Grotesk"; font-weight:600; font-size:14px}
+.dt-title .u{font-size:11.5px; color:var(--muted-2); font-weight:600}
+table.dt{width:100%; border-collapse:collapse; font-size:13px}
+table.dt th{font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); font-weight:600;
+  padding:0 10px 9px; text-align:right; border-bottom:1px solid var(--brd)}
+table.dt th.l{text-align:left}
+table.dt td{padding:10px; border-bottom:1px solid var(--brd-2); text-align:right; white-space:nowrap}
+table.dt td.l{text-align:left; color:var(--muted); font-weight:500}
+table.dt tr:last-child td{border-bottom:0}
+table.dt .mono{color:var(--text); font-weight:600}
+table.dt tr.now{background:linear-gradient(90deg, rgba(30,210,240,.10), transparent)}
+table.dt tr.now td.l{color:#fff; font-weight:700; position:relative}
+table.dt tr.now td.l::before{content:""; position:absolute; left:-10px; top:6px; bottom:6px; width:3px; background:var(--grad); border-radius:3px}
+table.dt tr:hover td{background:rgba(255,255,255,.02)}
+table.dt tfoot td{border-top:1px solid var(--brd); border-bottom:0; padding-top:12px; font-weight:700; color:#fff}
+table.dt tfoot td.l{color:var(--muted); text-transform:uppercase; font-size:11px; letter-spacing:.05em; font-weight:600}
+.v-up{color:var(--green); font-weight:600}
+.v-down{color:var(--red); font-weight:600}
+.scrollbox{max-height:360px; overflow:auto}
+.scrollbox::-webkit-scrollbar{width:8px} .scrollbox::-webkit-scrollbar-thumb{background:var(--brd); border-radius:8px}
+.table-x{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.table-x::-webkit-scrollbar{height:7px} .table-x::-webkit-scrollbar-thumb{background:var(--brd); border-radius:8px}
+
+/* engagement table */
+.eng-foot{margin-top:13px; font-size:12px; color:var(--muted); display:flex; gap:22px; flex-wrap:wrap}
+.eng-foot b{font-family:"JetBrains Mono"; color:var(--text); font-weight:600}
+
+/* status chips */
+.chip{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; white-space:nowrap}
+.chip .d{width:7px;height:7px;border-radius:50%}
+.chip.live{background:var(--green-bg); color:var(--green)} .chip.live .d{background:var(--green); box-shadow:0 0 8px var(--green)}
+.chip.progress{background:var(--amber-bg); color:var(--amber)} .chip.progress .d{background:var(--amber)}
+.chip.planned{background:rgba(120,140,170,.14); color:var(--muted)} .chip.planned .d{background:var(--muted-2)}
+.chip.filled{background:var(--green-bg); color:var(--green)} .chip.filled .d{background:var(--green); box-shadow:0 0 8px var(--green)}
+.chip.acting{background:var(--amber-bg); color:var(--amber)} .chip.acting .d{background:var(--amber)}
+.chip.vacant{background:var(--red-bg); color:var(--red)} .chip.vacant .d{background:var(--red); box-shadow:0 0 8px var(--red)}
+.health{display:inline-block; width:11px;height:11px;border-radius:50%; vertical-align:-1px}
+.health.green{background:var(--green); box-shadow:0 0 9px rgba(45,213,138,.7)}
+.health.amber{background:var(--amber); box-shadow:0 0 9px rgba(255,178,62,.6)}
+.health.red{background:var(--red); box-shadow:0 0 9px rgba(255,100,124,.6)}
+
+/* initiatives table */
+table.tbl{width:100%; border-collapse:collapse; font-size:13px}
+table.tbl th{text-align:left; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted-2); font-weight:600; padding:0 12px 11px; border-bottom:1px solid var(--brd)}
+table.tbl td{padding:13px 12px; border-bottom:1px solid var(--brd-2); vertical-align:top}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.init-name{font-weight:600; color:var(--text)}
+.rk{color:var(--muted); font-size:12.5px; max-width:330px} .rk.none{color:var(--muted-2)}
+.num-r{font-family:"JetBrains Mono"; font-weight:600; text-align:right; white-space:nowrap; color:var(--text)}
+.th-r{text-align:right !important}
+.delta{font-family:"JetBrains Mono"; font-weight:600; font-size:12px; padding:3px 8px; border-radius:999px; white-space:nowrap}
+.delta.up{color:var(--green); background:var(--green-bg)} .delta.down{color:var(--red); background:var(--red-bg)}
+
+/* org */
+.org-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.role{display:flex; align-items:center; gap:12px; padding:11px 13px; border:1px solid var(--brd-2); border-radius:var(--r-sm); background:var(--panel-2)}
+.avatar{width:34px;height:34px;border-radius:9px; display:grid; place-items:center; flex:none;
+  background:rgba(46,155,255,.14); border:1px solid var(--brd); color:var(--cyan)}
+.avatar.vac{background:var(--red-bg); border-color:rgba(255,100,124,.35); color:var(--red)}
+.avatar svg{width:17px;height:17px}
+.role-meta{min-width:0; flex:1}
+.role-meta .rname{font-weight:600; font-size:13.5px; color:var(--text)}
+.role-meta .rname.ph{color:var(--muted-2); font-style:italic; font-weight:500}
+.role-meta .rtitle{font-size:12px; color:var(--muted)}
+.gap-row{display:grid; grid-template-columns:1.4fr repeat(3,.8fr) 1.1fr; gap:10px; align-items:center; padding:11px 4px; border-bottom:1px solid var(--brd-2); font-size:13px}
+.gap-row:last-child{border-bottom:0}
+.gap-row.h{font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted-2); font-weight:600; border-bottom:1px solid var(--brd)}
+.gap-row .fn{font-weight:600; color:var(--text)}
+.gap-row .v{font-family:"JetBrains Mono"; font-weight:600; text-align:right}
+.fillbar{height:7px; border-radius:5px; background:rgba(255,255,255,.07); position:relative; overflow:hidden}
+.fillbar i{position:absolute; left:0;top:0;bottom:0; border-radius:5px}
+.gap-foot{display:flex; gap:22px; margin-top:15px; flex-wrap:wrap}
+.gap-foot div{font-size:12px; color:var(--muted)}
+.gap-foot b{font-family:"JetBrains Mono"; font-weight:700; font-size:16px; color:#fff; display:block; margin-top:2px}
+
+/* meetings */
+.meet-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+.meet{padding:16px}
+.meet-top{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+.meet-top .mt{font-family:"Space Grotesk"; font-weight:600; font-size:14px}
+.meet-top .md{font-family:"JetBrains Mono"; font-size:11.5px; color:var(--cyan); white-space:nowrap; font-weight:600}
+.meet .att{font-size:12px; color:var(--muted); margin:6px 0 12px}
+.meet .att b{color:var(--text); font-weight:600}
+.dec{font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); font-weight:600; margin:0 0 8px}
+.meet ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px}
+.meet li{font-size:12.5px; color:var(--text); display:flex; gap:9px; line-height:1.4}
+.meet li::before{content:""; width:6px;height:6px;border-radius:50%; background:var(--cyan); box-shadow:0 0 7px var(--cyan); margin-top:6px; flex:none}
+.meet .owner{margin-top:12px; font-size:11.5px; color:var(--muted)}
+.meet .owner b{color:var(--text); font-weight:600}
+
+.note{margin-top:32px; font-size:11.5px; color:var(--muted-2); text-align:center; border-top:1px dashed var(--brd-2); padding-top:18px}
+
+@media (max-width:1080px){
+  .grid-2,.grid-2-1,.meet-grid,.org-grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:760px){
+  body{-webkit-text-size-adjust:100%}
+  .topbar-inner{flex-wrap:wrap; gap:9px 12px; padding:11px 15px}
+  .brand{flex:1 1 100%}
+  .topbar-spacer{display:none}
+  .fybadge{font-size:11px; padding:6px 11px}
+  .live{font-size:11px}
+  .tabs-inner,main{padding-left:14px; padding-right:14px}
+  main{padding-top:18px; padding-bottom:48px}
+  .area-title h2{font-size:22px}
+  .subnav{gap:7px}
+  .pill{font-size:12.5px; padding:8px 13px}
+  .escal{padding:14px 15px 15px}
+  .escal .ehint{margin-left:0; flex-basis:100%; order:5}
+  .kpis{grid-template-columns:1fr 1fr; gap:11px}
+  .kpi{padding:13px 13px}
+  .kpi .v{font-size:21px}
+  .panel{padding:15px}
+  .section-head{align-items:flex-start; row-gap:2px}
+  .section-head .hint{flex-basis:100%; order:5}
+  .period{order:6; width:100%; margin-top:8px; overflow-x:auto; flex-wrap:nowrap}
+  .period button{flex:0 0 auto; padding:9px 15px}
+  .grid-2,.grid-2-1,.meet-grid,.org-grid{grid-template-columns:1fr}
+  table.dt{min-width:392px}
+  table.tbl{min-width:680px}
+  table.dt th,table.dt td{padding:9px 8px}
+  table.tbl th,table.tbl td{padding:11px 9px}
+  .rk{max-width:none}
+  .gap-row{grid-template-columns:1.25fr .8fr .8fr .85fr}
+  .gap-row .hide-sm{display:none}
+  .tab{padding:14px 15px 12px; font-size:14.5px}
+  .clock{font-size:11.5px}
+}
+@media (max-width:400px){
+  .kpis{grid-template-columns:1fr}
+  .area-title h2{font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+:focus-visible{outline:2px solid var(--cyan); outline-offset:2px; border-radius:6px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img class="mark" src="data:image/png;base64,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" alt="Jio" />
+      <span class="brand-meta">
+        <span class="office">Executive Performance Cockpit</span>
+      </span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="fybadge">FY 2026‑27</span>
+    <span class="live"><span class="dot-live"></span>Live · <span class="clock" id="clock">—</span></span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Business verticals">
+  <div class="tabs-inner" id="tabbar">
+    <button class="tab" data-tab="home" aria-selected="true">Home</button>
+    <button class="tab" data-tab="digital" aria-selected="false">Digital Services</button>
+  </div>
+</nav>
+
+<main id="app"></main>
+
+<script>
+/* =====================================================================
+   Jio Executive Dashboard — template
+   All figures, names and meetings below are PLACEHOLDER / sample data
+   for layout only. Wire each field to live BI / API feeds to activate.
+   ===================================================================== */
+
+const PERIODS = {
+  day:    {label:"Daily",     short:"Day",     points:14, div:365, caption:"Trailing 14 days",   head:"Today",            col:"Day"},
+  week:   {label:"Weekly",    short:"Week",    points:12, div:52,  caption:"Trailing 12 weeks",  head:"This week",        col:"Week"},
+  month:  {label:"Monthly",   short:"Month",   points:12, div:12,  caption:"Trailing 12 months", head:"This month (MTD)", col:"Month"},
+  quarter:{label:"Quarterly", short:"Quarter", points:8,  div:4,   caption:"Trailing 8 quarters",head:"This quarter (QTD)",col:"Quarter"},
+  year:   {label:"Yearly",    short:"Year",    points:5,  div:1,   caption:"Last 5 financial years",head:"FY27 YTD",      col:"Financial year"}
+};
+
+function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function labelsFor(period){
+  const now=new Date(2026,5,17); const out=[];
+  if(period==="day"){for(let i=13;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);out.push(d.getDate()+" "+MONTHS[d.getMonth()]);}}
+  else if(period==="week"){for(let i=11;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i*7);out.push("Wk of "+d.getDate()+" "+MONTHS[d.getMonth()]);}}
+  else if(period==="month"){for(let i=11;i>=0;i--){const d=new Date(now);d.setMonth(now.getMonth()-i);out.push(MONTHS[d.getMonth()]+" '"+String(d.getFullYear()).slice(2));}}
+  else if(period==="quarter"){out.push("Q2 FY25","Q3 FY25","Q4 FY25","Q1 FY26","Q2 FY26","Q3 FY26","Q4 FY26","Q1 FY27");}
+  else {out.push("FY23","FY24","FY25","FY26","FY27");}
+  return out;
+}
+function series(seed, metric, period, annualActual, annualPlan, bias){
+  const p=PERIODS[period]; const n=p.points; const r=rng(seed + metric*131 + n*977);
+  const baseA=annualActual/p.div, baseP=annualPlan/p.div; const plan=[],actual=[];
+  for(let i=0;i<n;i++){
+    const ramp=0.82+0.30*(i/(n-1||1));
+    const pv=baseP*ramp*(1+(r()-0.5)*0.03);
+    const av=pv*(1+bias+(r()-0.5)*0.07);
+    plan.push(pv); actual.push(av);
+  }
+  return {labels:labelsFor(period), plan, actual, headPlan:plan[n-1], headActual:actual[n-1]};
+}
+const fmt=(v,dec=0)=>Number(v).toLocaleString("en-IN",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+const pct=(a,p)=>((a-p)/p*100);
+const deltaPill=(a,p)=>{const d=pct(a,p);const up=d>=0;return `<span class="delta ${up?'up':'down'}">${up?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span>`;};
+const varCell=(a,p)=>{const up=a>=p;return `<span class="${up?'v-up':'v-down'}">${up?'+':'−'}${Math.abs(pct(a,p)).toFixed(1)}%</span>`;};
+
+const PERSON_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>`;
+const VAC_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5" stroke-dasharray="3 3"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5" stroke-dasharray="3 3"/></svg>`;
+
+/* =====================================================================
+   DATA — figures are placeholders.  Names intentionally omitted.
+   ===================================================================== */
+const DATA={
+  mobility:{name:"Mobility", eyebrow:"Wireless · Connectivity",
+    rev:{aActual:118400,aPlan:115000,bias:0.030}, cust:{aActual:34.0,aPlan:36.0,bias:-0.055},
+    eng:{app:"MyJio", mau:482,wau:441,dau:398, mauU:"Mn", sess:"38 min", mauT:2.1,wauT:1.4,dauT:0.8,sessT:3.2},
+    initiatives:[
+      {n:"5G monetisation — premium plans",s:"live",h:"green",rk:"None — uptake ahead of curve",plan:4200,act:4480},
+      {n:"True5G FWA bundling with Mobility",s:"live",h:"amber",rk:"Bundled-CPE supply constrained; alternate vendor under eval",plan:1900,act:1610},
+      {n:"AI Saarthi voice assistant rollout",s:"progress",h:"green",rk:"Phase-2 circles pending IT readiness sign-off",plan:0,act:0},
+      {n:"Postpaid family plan refresh",s:"progress",h:"amber",rk:"Pricing approval pending — decision needed at next ManCom",plan:850,act:540},
+      {n:"Rural 2G→4G migration push",s:"planned",h:"red",rk:"Awaiting subsidy framework clarity; GTM slipped one quarter",plan:1200,act:0}
+    ],
+    leadership:[{r:"President — Mobility",s:"filled"},{r:"Chief Revenue Officer",s:"filled"},{r:"Head — 5G Monetisation",s:"vacant"},{r:"Head — Network Planning",s:"filled"},{r:"Head — Consumer Marketing",s:"acting"},{r:"Head — Circle Operations (West)",s:"filled"}],
+    gap:[{fn:"Engineering & Network",req:520,av:486},{fn:"Sales & Distribution",req:310,av:268},{fn:"Product & Pricing",req:64,av:51},{fn:"Customer Experience",req:140,av:133}],
+    meetings:[
+      {t:"Weekly Mobility ManCom",d:"Mon · 16 Jun",dec:["Approved premium 5G tier launch in 6 metros from 1 Jul","Held postpaid family pricing pending finance review","Mandated weekly churn dashboard for top-20 circles"]},
+      {t:"5G Monetisation Review",d:"Thu · 12 Jun",dec:["Greenlit FWA + mobility bundle pilot (3 circles)","Escalated CPE supply risk to procurement","Set ₹4,500 Cr Q2 stretch target for premium tiers"]}
+    ]},
+
+  home:{name:"Home", eyebrow:"Broadband · Connected Home",
+    rev:{aActual:15800,aPlan:16500,bias:-0.042}, cust:{aActual:11.4,aPlan:12.0,bias:-0.050},
+    eng:{app:"JioHome", mau:58,wau:49,dau:41, mauU:"Mn", sess:"112 min", mauT:4.6,wauT:3.1,dauT:2.4,sessT:5.8},
+    churn:{title:"Churn — broadband / connected home", unit:"% of base · monthly", rows:[
+      {m:"Monthly churn rate", v:"1.8%", d:"+0.2pp vs plan (1.6%)", t:"bad"},
+      {m:"Gross disconnections", v:"212 K", d:"+1.4% WoW", t:"bad"},
+      {m:"Voluntary churn", v:"1.2%", d:"of base", t:"flat"},
+      {m:"Involuntary (non-pay)", v:"0.6%", d:"of base", t:"flat"},
+      {m:"Win-backs / reconnects", v:"41 K", d:"+6.2% WoW", t:"good"}
+    ]},
+    initiatives:[
+      {n:"AirFiber Express Install (15-min callback)",s:"live",h:"green",rk:"None — activation TAT beating 24–48h SLA",plan:2600,act:2840},
+      {n:"Multi-gigabit AirFiber (5 Gbps)",s:"live",h:"amber",rk:"Backhaul augmentation lagging in 2 metros",plan:1450,act:1180},
+      {n:"Jio TeleFrame (AI smart frame)",s:"progress",h:"green",rk:"Meta co-launch creative locked; supply ramp on track",plan:300,act:210},
+      {n:"JioBuilding acquisition engine",s:"progress",h:"amber",rk:"Society-level data partnerships need legal sign-off (DPDP)",plan:0,act:0},
+      {n:"Managed Wi-Fi attach for Home",s:"planned",h:"amber",rk:"Bundling construct pending pricing decision",plan:520,act:0}
+    ],
+    leadership:[{r:"President — Home",s:"filled"},{r:"Head — AirFiber GTM",s:"vacant"},{r:"Head — Install & Field Ops",s:"filled"},{r:"Head — Connected Devices",s:"acting"},{r:"Head — Home Product",s:"filled"},{r:"Head — Channel Partnerships",s:"filled"}],
+    gap:[{fn:"Field Installation",req:1800,av:1520},{fn:"Product & Devices",req:90,av:74},{fn:"GTM & Channel",req:210,av:188},{fn:"Support",req:420,av:401}],
+    meetings:[
+      {t:"Home Weekly Review",d:"Tue · 16 Jun",dec:["Approved nationwide rollout of Express Install","Flagged backhaul risk for 5 Gbps tier — capex ask raised","Deferred Managed Wi-Fi bundle pricing to ManCom"]},
+      {t:"TeleFrame × Meta Sync",d:"Fri · 13 Jun",dec:["Locked co-branded launch window","Agreed joint demo at AGM showcase","Aligned on first-lot volume commitment"]}
+    ]},
+
+  enterprise:{name:"Enterprise", eyebrow:"B2B · Cloud · Connectivity",
+    rev:{aActual:9850,aPlan:9400,bias:0.046}, cust:{aActual:0.42,aPlan:0.40,bias:0.040},
+    eng:{app:"JioBusiness", mau:3.8,wau:3.1,dau:2.4, mauU:"Mn", sess:"54 min", mauT:6.2,wauT:4.0,dauT:2.9,sessT:1.1},
+    initiatives:[
+      {n:"Agentic procurement for kirana/MSME",s:"progress",h:"green",rk:"Pilot cohort onboarded; conversion ahead of plan",plan:140,act:170},
+      {n:"Private 5G for enterprises",s:"live",h:"amber",rk:"Spectrum allocation timelines uncertain for 3 deals",plan:620,act:520},
+      {n:"Cloud & connectivity bundle",s:"live",h:"green",rk:"None",plan:980,act:1030},
+      {n:"SMB Workspace (Reliance × Anthropic)",s:"progress",h:"amber",rk:"Commercial model needs CEO sign-off before scale",plan:0,act:0},
+      {n:"IoT / connected assets platform",s:"planned",h:"amber",rk:"Build vs buy decision pending architecture review",plan:240,act:0}
+    ],
+    leadership:[{r:"President — Enterprise",s:"filled"},{r:"Head — Cloud & Edge",s:"vacant"},{r:"Head — SMB / MSME",s:"filled"},{r:"Head — Large Accounts",s:"filled"},{r:"Head — Solutions Engineering",s:"acting"},{r:"Head — Partnerships & Alliances",s:"vacant"}],
+    gap:[{fn:"Solutions Engineering",req:240,av:182},{fn:"Enterprise Sales",req:300,av:271},{fn:"Cloud Platform",req:120,av:88},{fn:"Customer Success",req:160,av:149}],
+    meetings:[
+      {t:"Enterprise Growth Review",d:"Wed · 17 Jun",dec:["Approved scale-up of MSME agentic procurement pilot","Escalated private-5G spectrum dependency to policy team","Set Q2 large-deal pipeline target at ₹3,200 Cr TCV"]},
+      {t:"SMB Workspace Commercials",d:"Mon · 15 Jun",dec:["Shortlisted two pricing models for CEO review","Agreed phased GTM starting with 3 verticals","Initiated security & DPDP compliance review"]}
+    ]},
+
+  digital:{name:"Digital Services", eyebrow:"Apps · Platforms · AI Services", isParent:true,
+    children:{
+      all:{name:"Portfolio rollup", eyebrow:"Digital Services — all lines",
+        rev:{aActual:6120,aPlan:6000,bias:0.020}, cust:{aActual:18.5,aPlan:18.0,bias:0.028},
+        eng:{app:"Portfolio", mau:312,wau:248,dau:176, mauU:"Mn", sess:"31 min", mauT:3.4,wauT:2.6,dauT:1.9,sessT:2.2},
+        initiatives:[
+          {n:"JioPC cloud desktop scale-up",s:"live",h:"green",rk:"None",plan:300,act:330},
+          {n:"Managed Wi-Fi monetisation",s:"progress",h:"amber",rk:"Attach-rate below plan; bundling decision pending",plan:800,act:640},
+          {n:"JioGames AI-native rebuild",s:"progress",h:"amber",rk:"Engine migration timeline at risk",plan:450,act:300},
+          {n:"Teleos + entertainment ad stack",s:"live",h:"green",rk:"None — ad fill ahead of plan",plan:4500,act:4720}
+        ],
+        leadership:[{r:"President — Digital Services",s:"filled"},{r:"Head — Platforms & AI",s:"vacant"},{r:"Head — Monetisation",s:"filled"},{r:"Head — Product Design",s:"acting"}],
+        gap:[{fn:"Engineering",req:680,av:602},{fn:"Product",req:140,av:118},{fn:"Design",req:90,av:71},{fn:"Data & ML",req:160,av:124}],
+        meetings:[{t:"Digital Services Portfolio Review",d:"Tue · 16 Jun",dec:["Approved JioPC capacity expansion","Asked for Managed Wi-Fi bundling proposal in 2 weeks","Flagged JioGames migration slippage to CEO"]}]},
+      jiopc:{name:"JioPC", eyebrow:"Cloud desktop service",
+        rev:{aActual:340,aPlan:300,bias:0.13}, cust:{aActual:2.3,aPlan:2.0,bias:0.15},
+        eng:{app:"JioPC", mau:2.1,wau:1.6,dau:0.9, mauU:"Mn", sess:"96 min", mauT:9.4,wauT:7.2,dauT:5.1,sessT:4.4},
+        initiatives:[
+          {n:"Cloud desktop capacity scale-up",s:"live",h:"green",rk:"None — utilisation healthy",plan:300,act:330},
+          {n:"STB-as-PC (TV + keyboard) mode",s:"progress",h:"amber",rk:"HDMI-CEC default-input UX needs polish",plan:0,act:0},
+          {n:"Productivity app marketplace",s:"planned",h:"amber",rk:"Partner onboarding model pending decision",plan:40,act:0}
+        ],
+        leadership:[{r:"Product Head — JioPC",s:"filled"},{r:"Head — Cloud Infra",s:"vacant"},{r:"Head — Growth",s:"acting"}],
+        gap:[{fn:"Cloud Infra",req:90,av:68},{fn:"Product",req:24,av:19},{fn:"Growth",req:30,av:22}],
+        meetings:[{t:"JioPC Weekly",d:"Wed · 17 Jun",dec:["Approved next capacity tranche","Prioritised STB-as-PC for festive launch","Opened Cloud Infra head requisition"]}]},
+      wifi:{name:"Managed Wi-Fi", eyebrow:"Connectivity service",
+        rev:{aActual:640,aPlan:800,bias:-0.20}, cust:{aActual:1.3,aPlan:1.6,bias:-0.18},
+        eng:{app:"Managed Wi-Fi", mau:4.2,wau:3.7,dau:3.3, mauU:"Mn", sess:"—", mauT:1.1,wauT:0.6,dauT:0.4,sessT:0},
+        initiatives:[
+          {n:"Home + Managed Wi-Fi bundle",s:"progress",h:"red",rk:"Attach-rate well below plan — pricing/bundle decision needed urgently",plan:520,act:300},
+          {n:"SMB managed Wi-Fi offering",s:"live",h:"amber",rk:"Install capacity constrained in metros",plan:280,act:240},
+          {n:"Mesh device subsidy program",s:"planned",h:"amber",rk:"Subsidy economics under finance review",plan:0,act:0}
+        ],
+        leadership:[{r:"Product Head — Managed Wi-Fi",s:"vacant"},{r:"Head — Field Ops",s:"filled"},{r:"Head — Pricing",s:"acting"}],
+        gap:[{fn:"Field Ops",req:140,av:112},{fn:"Product",req:20,av:12},{fn:"Pricing & Analytics",req:18,av:14}],
+        meetings:[{t:"Managed Wi-Fi Review",d:"Tue · 16 Jun",dec:["Escalated attach-rate shortfall to ManCom","Two bundle options drafted for decision","Held mesh subsidy pending unit economics"]}]},
+      jiogames:{name:"JioGames", eyebrow:"Gaming platform",
+        rev:{aActual:420,aPlan:450,bias:-0.067}, cust:{aActual:6.8,aPlan:7.0,bias:-0.028},
+        eng:{app:"JioGames", mau:64,wau:38,dau:19, mauU:"Mn", sess:"44 min", mauT:5.0,wauT:3.3,dauT:2.0,sessT:6.1},
+        initiatives:[
+          {n:"AI-native platform rebuild",s:"progress",h:"amber",rk:"Engine migration timeline at risk; phased cutover proposed",plan:0,act:0},
+          {n:"ICC cricket game (licensed)",s:"progress",h:"green",rk:"License RFP secured; build on track for festive",plan:120,act:95},
+          {n:"Cloud gaming subscription",s:"live",h:"amber",rk:"Latency budget tight on low-end devices",plan:200,act:160},
+          {n:"In-app ads & rewarded video",s:"live",h:"green",rk:"None",plan:130,act:165}
+        ],
+        leadership:[{r:"Business Head — JioGames",s:"filled"},{r:"Head — Platform Engineering",s:"vacant"},{r:"Head — Content & Licensing",s:"filled"},{r:"Head — Live Ops",s:"acting"}],
+        gap:[{fn:"Platform Engineering",req:120,av:84},{fn:"Game Studio",req:80,av:71},{fn:"Live Ops",req:40,av:33}],
+        meetings:[{t:"JioGames Weekly",d:"Mon · 15 Jun",dec:["Approved phased engine cutover plan","Confirmed ICC title festive launch","Set latency target for cloud-gaming on entry devices"]}]},
+      teleos:{name:"Teleos + Entertainment", eyebrow:"OTT · Streaming · Content apps",
+        rev:{aActual:4720,aPlan:4500,bias:0.049}, cust:{aActual:9.2,aPlan:9.0,bias:0.022},
+        eng:{app:"Teleos / OTT", mau:268,wau:214,dau:152, mauU:"Mn", sess:"58 min", mauT:3.0,wauT:2.4,dauT:1.6,sessT:4.0},
+        initiatives:[
+          {n:"Ad stack & programmatic fill",s:"live",h:"green",rk:"None — ad fill ahead of plan",plan:2400,act:2560},
+          {n:"Subscription tier restructuring",s:"live",h:"amber",rk:"Churn at upgrade boundary higher than modelled",plan:1600,act:1480},
+          {n:"AI content discovery / personalisation",s:"progress",h:"green",rk:"Recommender uplift validated in A/B",plan:0,act:0},
+          {n:"Live sports rights activation",s:"progress",h:"amber",rk:"Peak-concurrency infra readiness to confirm",plan:500,act:680}
+        ],
+        leadership:[{r:"Business Head — Entertainment",s:"filled"},{r:"Head — Ad Monetisation",s:"filled"},{r:"Head — Content Strategy",s:"vacant"},{r:"Head — Streaming Platform",s:"acting"}],
+        gap:[{fn:"Streaming Platform",req:220,av:186},{fn:"Ad Tech",req:90,av:82},{fn:"Content & Programming",req:120,av:97},{fn:"Data & Personalisation",req:70,av:54}],
+        meetings:[{t:"Entertainment Weekly",d:"Thu · 12 Jun",dec:["Approved expanded programmatic fill","Asked for upgrade-churn fix plan","Confirmed peak-concurrency load test before sports activation"]}]}
+    }}
+};
+
+/* ---------- state ---------- */
+let state={tab:"home", sub:"all", period:"month"};
+const ESC={
+  home:[
+    "[ Escalation — placeholder: capex sign-off pending for 5 Gbps backhaul augmentation in 2 metros ]",
+    "[ OTD — placeholder: pricing decision required on Home + Managed Wi-Fi bundle ]"
+  ],
+  digital:{
+    all:[
+      "[ Escalation — placeholder: JioGames AI-engine migration slippage flagged to CEO ]",
+      "[ OTD — placeholder: approve Managed Wi-Fi bundling construct ]"
+    ],
+    jiopc:["[ OTD — placeholder: approve next cloud-capacity tranche and open Cloud Infra head role ]"],
+    wifi:[
+      "[ Escalation — placeholder: attach-rate well below plan — urgent pricing / bundle decision ]",
+      "[ OTD — placeholder: mesh-device subsidy economics sign-off ]"
+    ],
+    jiogames:[
+      "[ Escalation — placeholder: engine-migration timeline at risk; phased cutover proposed ]",
+      "[ OTD — placeholder: confirm cloud-gaming latency target for entry-tier devices ]"
+    ],
+    teleos:[
+      "[ Escalation — placeholder: upgrade-boundary churn running above model ]",
+      "[ OTD — placeholder: peak-concurrency load-test gate before live-sports activation ]"
+    ]
+  }
+};
+const STATUS_LABEL={live:"Live",progress:"In progress",planned:"Not started"};
+const ROLE_LABEL={filled:"Filled",acting:"Acting",vacant:"Vacant"};
+function currentArea(){return state.tab==="digital"?DATA.digital.children[state.sub]:DATA[state.tab];}
+function el(html){const t=document.createElement("template");t.innerHTML=html.trim();return t.content.firstChild;}
+function seed(a){let s=0;for(const c of (a.name||"x"))s=(s*31+c.charCodeAt(0))>>>0;return s+1;}
+
+function render(){
+  const a=currentArea(); const p=PERIODS[state.period]; const app=document.getElementById("app"); app.innerHTML="";
+
+  app.appendChild(el(`<div class="area-head">
+    <div class="area-title"><div class="eyebrow">${a.eyebrow}</div><h2>${a.name}</h2></div>
+  </div>`));
+
+  if(state.tab==="digital"){
+    const subs=DATA.digital.children; const nav=el(`<div class="subnav" role="group" aria-label="Digital service lines"></div>`);
+    Object.keys(subs).forEach(k=>{const b=el(`<button class="pill" data-sub="${k}" aria-pressed="${state.sub===k}">${subs[k].name}</button>`);b.onclick=()=>{state.sub=k;render();};nav.appendChild(b);});
+    app.appendChild(nav);
+  }
+
+  const escList = state.tab==="digital" ? ESC.digital[state.sub] : ESC[state.tab];
+  if(escList && escList.length){
+    app.appendChild(el(`<div class="panel escal">
+      <div class="eh"><span class="etag">!</span><h3>Key escalations / OTDs to highlight</h3><span class="ehint">OTD = one-time decision</span></div>
+      <ul>${escList.map(x=>`<li>${x}</li>`).join("")}</ul></div>`));
+  }
+
+  const rev=series(seed(a),1,state.period,a.rev.aActual,a.rev.aPlan,a.rev.bias);
+  const cust=series(seed(a),2,state.period,a.cust.aActual,a.cust.aPlan,a.cust.bias);
+  const onTrack=a.initiatives.filter(i=>i.h==="green").length;
+  const vac=a.leadership.filter(l=>l.s==="vacant").length;
+  const totReq=a.gap.reduce((s,g)=>s+g.req,0), totAv=a.gap.reduce((s,g)=>s+g.av,0);
+  const fillRate=Math.round(totAv/totReq*100);
+
+  app.appendChild(el(`<div class="kpis">
+    <div class="kpi panel"><div class="label">Revenue · ${p.head}</div>
+      <div class="v">₹${fmt(rev.headActual)}<span class="u">Cr</span></div>
+      <div class="sub">Plan ₹${fmt(rev.headPlan)} Cr ${deltaPill(rev.headActual,rev.headPlan)}</div></div>
+    <div class="kpi panel"><div class="label">Customer adds · ${p.head}</div>
+      <div class="v">${fmt(cust.headActual,1)}<span class="u">Mn</span></div>
+      <div class="sub">Plan ${fmt(cust.headPlan,1)} Mn ${deltaPill(cust.headActual,cust.headPlan)}</div></div>
+    <div class="kpi panel"><div class="label">Initiatives on track</div>
+      <div class="v">${onTrack}<span class="u">/ ${a.initiatives.length}</span></div>
+      <div class="sub">${a.initiatives.length-onTrack} need attention</div></div>
+    <div class="kpi panel"><div class="label">Org fill rate</div>
+      <div class="v">${fillRate}<span class="u">%</span></div>
+      <div class="sub">${vac} leadership vacanc${vac===1?'y':'ies'} · gap ${fmt(totReq-totAv)}</div></div>
+  </div>`));
+
+  /* ===== SECTION A : performance (tabular + own period toggle) ===== */
+  const secA=el(`<section class="section"></section>`);
+  const headA=el(`<div class="section-head"><span class="tag">A</span><h3>Performance metrics</h3>
+    <span class="hint">AOP plan vs actual</span><span class="spacer"></span></div>`);
+  const toggle=el(`<div class="period" role="group" aria-label="Time granularity"></div>`);
+  Object.keys(PERIODS).forEach(k=>{const b=el(`<button data-period="${k}" aria-pressed="${state.period===k}">${PERIODS[k].label}</button>`);b.onclick=()=>{state.period=k;render();};toggle.appendChild(b);});
+  headA.appendChild(toggle); secA.appendChild(headA);
+  secA.appendChild(el(`<div class="cap">Granularity · <b>${p.label}</b> — ${p.caption}. Latest period highlighted; newest first.</div>`));
+
+  const gridA=el(`<div class="grid-2"></div>`);
+  gridA.appendChild(perfTable("Revenue", "₹ Cr", rev, 0, p.col));
+  gridA.appendChild(perfTable("Customer acquisition", "Mn", cust, 1, p.col));
+  secA.appendChild(gridA);
+  secA.appendChild(state.tab==="home" ? churnTable(a.churn) : engTable(a.eng));
+  app.appendChild(secA);
+
+  /* ===== SECTION B : initiatives ===== */
+  const secB=el(`<section class="section"><div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3>
+    <span class="hint">live status · roadblocks &amp; decisions · revenue plan vs actual</span></div></section>`);
+  const cardB=el(`<div class="panel"></div>`);
+  const rowsB=a.initiatives.map(i=>`<tr>
+    <td><div class="init-name">${i.n}</div></td>
+    <td><span class="chip ${i.s}"><span class="d"></span>${STATUS_LABEL[i.s]}</span></td>
+    <td style="text-align:center"><span class="health ${i.h}"></span></td>
+    <td><div class="rk ${i.rk.startsWith('None')?'none':''}">${i.rk}</div></td>
+    <td class="num-r">${i.plan?fmt(i.plan):'—'}</td>
+    <td class="num-r">${i.act?fmt(i.act):'—'}</td>
+    <td class="num-r">${i.plan&&i.act?deltaPill(i.act,i.plan):'<span style="color:var(--muted-2)">—</span>'}</td></tr>`).join("");
+  cardB.appendChild(el(`<div class="table-x"><table class="tbl"><thead><tr>
+    <th>Initiative</th><th>Status</th><th style="text-align:center">Health</th><th>Roadblocks / decisions</th>
+    <th class="th-r">Plan ₹Cr</th><th class="th-r">Actual ₹Cr</th><th class="th-r">Var.</th></tr></thead>
+    <tbody>${rowsB}</tbody></table></div>`));
+  secB.appendChild(cardB); app.appendChild(secB);
+
+  /* ===== SECTION C : org ===== */
+  const secC=el(`<section class="section"><div class="section-head"><span class="tag">C</span><h3>Organisation</h3>
+    <span class="hint">leadership coverage · resource gap</span></div></section>`);
+  const gridC=el(`<div class="grid-2-1"></div>`);
+  const lc=el(`<div class="panel"><div class="dt-title"><span class="t">Key leadership positions</span><span class="u">name · status</span></div><div class="org-grid"></div></div>`);
+  const og=lc.querySelector(".org-grid");
+  a.leadership.forEach(l=>{const vacant=l.s==="vacant";
+    og.appendChild(el(`<div class="role">
+      <div class="avatar ${vacant?'vac':''}">${vacant?VAC_ICON:PERSON_ICON}</div>
+      <div class="role-meta">
+        <div class="rname ${vacant?'':'ph'}">${vacant?'Open position':'[ Name placeholder ]'}</div>
+        <div class="rtitle">${l.r}</div></div>
+      <span class="chip ${l.s}"><span class="d"></span>${ROLE_LABEL[l.s]}</span></div>`));});
+  const rc=el(`<div class="panel"><div class="dt-title"><span class="t">Resource gap summary</span><span class="u">headcount</span></div></div>`);
+  rc.appendChild(el(`<div class="gap-row h"><span class="fn">Function</span><span class="v">Req.</span><span class="v">Avail.</span><span class="v">Gap</span><span class="v hide-sm">Fill</span></div>`));
+  a.gap.forEach(g=>{const fill=Math.round(g.av/g.req*100);const col=fill>=95?'var(--green)':fill>=85?'var(--amber)':'var(--red)';
+    rc.appendChild(el(`<div class="gap-row">
+      <span class="fn">${g.fn}</span><span class="v">${fmt(g.req)}</span><span class="v">${fmt(g.av)}</span>
+      <span class="v" style="color:${g.req-g.av>0?'var(--red)':'var(--muted)'}">${fmt(g.req-g.av)}</span>
+      <span class="hide-sm"><span class="fillbar"><i style="width:${fill}%;background:${col};box-shadow:0 0 8px ${col}"></i></span></span></div>`));});
+  rc.appendChild(el(`<div class="gap-foot">
+    <div>Total required<b>${fmt(totReq)}</b></div><div>Available<b>${fmt(totAv)}</b></div>
+    <div>Open gap<b style="color:var(--red)">${fmt(totReq-totAv)}</b></div><div>Overall fill<b>${fillRate}%</b></div></div>`));
+  gridC.appendChild(lc); gridC.appendChild(rc); secC.appendChild(gridC); app.appendChild(secC);
+
+  /* ===== SECTION D : meetings ===== */
+  const secD=el(`<section class="section"><div class="section-head"><span class="tag">D</span><h3>Leadership meetings &amp; key decisions — this week</h3></div></section>`);
+  const gridD=el(`<div class="meet-grid"></div>`);
+  a.meetings.forEach(m=>{gridD.appendChild(el(`<div class="panel meet">
+    <div class="meet-top"><span class="mt">${m.t}</span><span class="md">${m.d}</span></div>
+    <div class="att">Attendees · <b>[ Attendee list placeholder ]</b></div>
+    <div class="dec">Decisions taken</div>
+    <ul>${m.dec.map(d=>`<li>${d}</li>`).join("")}</ul>
+    <div class="owner">Decision owner · <b>[ Owner placeholder ]</b></div></div>`));});
+  secD.appendChild(gridD); app.appendChild(secD);
+
+  app.appendChild(el(`<div class="note">Template view · all figures, names and meeting details are placeholder/sample data for layout. Wire each metric to live BI / API feeds to activate real-time reporting.</div>`));
+}
+
+/* ---------- builders ---------- */
+function perfTable(title, unit, d, dec, colLabel){
+  const card=el(`<div class="panel dt-wrap"></div>`);
+  card.appendChild(el(`<div class="dt-title"><span class="t">${title} — AOP plan vs actual</span><span class="u">${unit}</span></div>`));
+  const n=d.labels.length; const pre=unit.startsWith("₹")?"₹":"";
+  let body="";
+  for(let i=n-1;i>=0;i--){
+    const isNow=i===n-1; const a=d.actual[i], p=d.plan[i];
+    body+=`<tr class="${isNow?'now':''}"><td class="l">${d.labels[i]}${isNow?' · current':''}</td>
+      <td class="mono">${pre}${fmt(p,dec)}</td><td class="mono">${pre}${fmt(a,dec)}</td>
+      <td class="mono">${a>=p?'+':'−'}${pre}${fmt(Math.abs(a-p),dec)}</td>
+      <td>${varCell(a,p)}</td></tr>`;
+  }
+  const totP=d.plan.reduce((s,x)=>s+x,0), totA=d.actual.reduce((s,x)=>s+x,0);
+  const scroll=n>10?'scrollbox':'';
+  card.appendChild(el(`<div class="table-x ${scroll}"><table class="dt">
+    <thead><tr><th class="l">${colLabel}</th><th>AOP plan</th><th>Actual</th><th>Variance</th><th>Var %</th></tr></thead>
+    <tbody>${body}</tbody>
+    <tfoot><tr><td class="l">Period total</td><td class="mono">${pre}${fmt(totP,dec)}</td><td class="mono">${pre}${fmt(totA,dec)}</td>
+      <td class="mono">${totA>=totP?'+':'−'}${pre}${fmt(Math.abs(totA-totP),dec)}</td><td>${varCell(totA,totP)}</td></tr></tfoot>
+  </table></div>`));
+  return card;
+}
+
+function churnTable(c){
+  const card=el(`<div class="panel" style="margin-top:16px"></div>`);
+  card.appendChild(el(`<div class="dt-title"><span class="t">${c.title}</span><span class="u">${c.unit}</span></div>`));
+  const cls={bad:"v-down",good:"v-up",flat:""};
+  const rows=c.rows.map(r=>`<tr><td class="l">${r.m}</td><td class="mono">${r.v}</td><td><span class="${cls[r.t]}">${r.t==="bad"?"▲ ":r.t==="good"?"▼ ":""}${r.d}</span></td></tr>`).join("");
+  card.appendChild(el(`<div class="table-x"><table class="dt">
+    <thead><tr><th class="l">Metric</th><th>Current</th><th>vs plan / trend</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`));
+  card.appendChild(el(`<div class="eng-foot"><span>Lower churn is better — adverse moves shown in red. Figures are placeholder.</span></div>`));
+  return card;
+}
+
+function engTable(e){
+  const card=el(`<div class="panel" style="margin-top:16px"></div>`);
+  card.appendChild(el(`<div class="dt-title"><span class="t">Engagement — digital services</span><span class="u">app · ${e.app}</span></div>`));
+  const trend=t=>{const cls=t>0.05?'v-up':t<-0.05?'v-down':'';const ar=t>0.05?'▲':t<-0.05?'▼':'—';return `<span class="${cls}">${ar} ${t?Math.abs(t).toFixed(1)+'%':'flat'}</span>`;};
+  const row=(m,val,t)=>`<tr><td class="l">${m}</td><td class="mono">${val}</td><td>${trend(t)}</td></tr>`;
+  const stick=e.dau&&e.mau?Math.round(e.dau/e.mau*100)+"%":"—";
+  const wm=e.wau&&e.mau?Math.round(e.wau/e.mau*100)+"%":"—";
+  card.appendChild(el(`<div class="table-x"><table class="dt">
+    <thead><tr><th class="l">Metric</th><th>Current</th><th>WoW</th></tr></thead>
+    <tbody>
+      ${row("MAU — monthly active", fmt(e.mau,e.mau<10?1:0)+" "+e.mauU, e.mauT)}
+      ${row("WAU — weekly active", fmt(e.wau,e.wau<10?1:0)+" "+e.mauU, e.wauT)}
+      ${row("DAU — daily active", fmt(e.dau,e.dau<10?1:0)+" "+e.mauU, e.dauT)}
+      ${row("Avg. session time", e.sess, e.sessT)}
+    </tbody></table></div>`));
+  card.appendChild(el(`<div class="eng-foot"><span>Stickiness (DAU/MAU) · <b>${stick}</b></span><span>WAU/MAU · <b>${wm}</b></span></div>`));
+  return card;
+}
+
+/* ---------- wiring ---------- */
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===t));
+  state.tab=t.dataset.tab; if(state.tab==="digital") state.sub="all"; render();
+});
+function tick(){const d=new Date();
+  document.getElementById("clock").textContent=d.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true})+" IST";}
+tick(); setInterval(tick,1000);
+
+function syncSticky(){
+  const h=document.querySelector("header.topbar"), n=document.querySelector("nav.tabs");
+  if(h&&n) n.style.top=h.offsetHeight+"px";
+}
+window.addEventListener("resize",syncSticky);
+window.addEventListener("load",syncSticky);
+setTimeout(syncSticky,400);
+
+render();
+syncSticky();
+</script>
+</body>
+</html>
