@@ -51,6 +51,10 @@ header.topbar{position:sticky; top:0; z-index:40;
 .topbar-spacer{flex:1}
 .fybadge{font-family:"Space Grotesk"; font-weight:600; font-size:12px; color:var(--text);
   background:rgba(46,155,255,.12); border:1px solid var(--brd); padding:7px 13px; border-radius:999px; white-space:nowrap}
+.theme-btn{display:flex; align-items:center; gap:7px; font-family:"Space Grotesk"; font-weight:600; font-size:12px;
+  color:var(--text); background:var(--panel); border:1px solid var(--brd); padding:7px 12px; border-radius:999px; cursor:pointer; transition:.16s; white-space:nowrap}
+.theme-btn:hover{border-color:var(--cyan)}
+.theme-btn .ti{display:inline-flex} .theme-btn svg{width:15px; height:15px; display:block}
 .live{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); white-space:nowrap}
 .dot-live{width:8px;height:8px;border-radius:50%;background:var(--cyan); box-shadow:0 0 12px var(--cyan)}
 .dot-live{animation:pulse 2.2s infinite}
@@ -72,6 +76,8 @@ nav.tabs{position:sticky; top:73px; z-index:30;
 /* ---------- layout ---------- */
 main{max-width:1480px; margin:0 auto; padding:24px 28px 64px}
 .area-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:2px 0 18px; flex-wrap:wrap}
+.period-bar{display:flex; align-items:center; gap:10px}
+.period-label{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted-2); font-weight:600}
 .area-title .eyebrow{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--cyan); font-weight:600}
 .area-title h2{margin:3px 0 0; font-size:27px; font-weight:700; letter-spacing:-.4px}
 
@@ -254,7 +260,8 @@ table.tbl tfoot tr:hover td{background:transparent}
   .panel{padding:15px}
   .section-head{align-items:flex-start; row-gap:2px}
   .section-head .hint{flex-basis:100%; order:5}
-  .period{order:6; width:100%; margin-top:8px; overflow-x:auto; flex-wrap:nowrap}
+  .period-bar{width:100%; margin-top:4px}
+  .period{width:100%; overflow-x:auto; flex-wrap:nowrap}
   .period button{flex:0 0 auto; padding:9px 15px}
   .grid-2,.grid-2-1,.meet-grid,.org-grid{grid-template-columns:1fr}
   table.dt{min-width:392px}
@@ -272,6 +279,39 @@ table.tbl tfoot tr:hover td{background:transparent}
   .area-title h2{font-size:20px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+
+/* =================== LIGHT THEME =================== */
+body.light{
+  --jio:#0A6FD6; --jio-deep:#005AAC; --jio-bright:#1E7FE0; --cyan:#0E9DBC; --cyan-deep:#0C8AA6;
+  --bg0:#EEF3FB; --bg1:#FFFFFF; --bg2:#E9F0FA;
+  --panel:#FFFFFF; --panel-2:#F5F8FE;
+  --brd:rgba(18,66,130,.18); --brd-2:rgba(18,66,130,.11); --hi:rgba(255,255,255,.9);
+  --text:#10203B; --muted:#566884; --muted-2:#8593AD;
+  --green:#0E9E55; --green-bg:rgba(14,158,85,.12);
+  --amber:#C07407; --amber-bg:rgba(192,116,7,.14);
+  --red:#D6394B; --red-bg:rgba(214,57,75,.12);
+  color:var(--text);
+  background:
+    radial-gradient(1100px 620px at 82% -8%, rgba(14,157,188,.10), transparent 60%),
+    radial-gradient(1000px 700px at 8% 4%, rgba(10,116,214,.10), transparent 55%),
+    linear-gradient(180deg,#F1F5FC 0%, #FFFFFF 55%, #EEF3FB 100%);
+}
+body.light header.topbar{background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(238,244,252,.85)); border-bottom-color:var(--brd)}
+body.light nav.tabs{background:rgba(255,255,255,.82)}
+body.light .panel{box-shadow:0 1px 0 rgba(255,255,255,.85) inset, 0 10px 26px rgba(20,55,110,.08)}
+body.light .panel::before{background:linear-gradient(90deg,transparent,rgba(18,66,130,.16),transparent)}
+body.light .kpi .v{color:var(--text)}
+body.light .tab[aria-selected="true"]{color:var(--jio-deep)}
+body.light table.dt tr.now td.l{color:var(--jio-deep)}
+body.light table.dt tfoot td,
+body.light table.tbl tfoot td{color:var(--text)}
+body.light .gap-foot b{color:var(--text)}
+body.light table.dt tr:hover td,
+body.light table.tbl tr:hover td{background:rgba(18,66,130,.045)}
+body.light table.dt tr.now{background:linear-gradient(90deg, rgba(14,157,188,.13), transparent)}
+body.light .fillbar{background:rgba(18,66,130,.10)}
+body.light .role{background:var(--panel-2)}
+body.light .avatar{background:rgba(10,116,214,.10)}
 :focus-visible{outline:2px solid var(--cyan); outline-offset:2px; border-radius:6px}
 </style>
 </head>
@@ -286,6 +326,7 @@ table.tbl tfoot tr:hover td{background:transparent}
       </span>
     </div>
     <div class="topbar-spacer"></div>
+    <button class="theme-btn" id="themeBtn" aria-label="Switch colour theme"><span class="ti"></span><span class="tl">Light</span></button>
     <span class="fybadge">FY 2026‑27</span>
     <span class="live"><span class="dot-live"></span>Live · <span class="clock" id="clock">—</span></span>
   </div>
@@ -506,9 +547,13 @@ function seed(a){let s=0;for(const c of (a.name||"x"))s=(s*31+c.charCodeAt(0))>>
 function render(){
   const a=currentArea(); const p=PERIODS[state.period]; const app=document.getElementById("app"); app.innerHTML="";
 
-  app.appendChild(el(`<div class="area-head">
+  const areaHead=el(`<div class="area-head">
     <div class="area-title"><div class="eyebrow">${a.eyebrow}</div><h2>${a.name}</h2></div>
-  </div>`));
+    <div class="period-bar"><span class="period-label">View</span><div class="period" role="group" aria-label="Time granularity"></div></div>
+  </div>`);
+  const ptog=areaHead.querySelector(".period");
+  Object.keys(PERIODS).forEach(k=>{const b=el(`<button data-period="${k}" aria-pressed="${state.period===k}">${PERIODS[k].label}</button>`);b.onclick=()=>{state.period=k;render();};ptog.appendChild(b);});
+  app.appendChild(areaHead);
 
   if(state.tab==="digital"){
     const subs=DATA.digital.children; const nav=el(`<div class="subnav" role="group" aria-label="Digital service lines"></div>`);
@@ -547,11 +592,8 @@ function render(){
 
   /* ===== SECTION A : performance (tabular + own period toggle) ===== */
   const secA=el(`<section class="section"></section>`);
-  const headA=el(`<div class="section-head"><span class="tag">A</span><h3>Performance metrics</h3>
-    <span class="hint">AOP plan vs actual</span><span class="spacer"></span></div>`);
-  const toggle=el(`<div class="period" role="group" aria-label="Time granularity"></div>`);
-  Object.keys(PERIODS).forEach(k=>{const b=el(`<button data-period="${k}" aria-pressed="${state.period===k}">${PERIODS[k].label}</button>`);b.onclick=()=>{state.period=k;render();};toggle.appendChild(b);});
-  headA.appendChild(toggle); secA.appendChild(headA);
+  secA.appendChild(el(`<div class="section-head"><span class="tag">A</span><h3>Performance metrics</h3>
+    <span class="hint">AOP plan vs actual · ${p.label.toLowerCase()} view</span></div>`));
   secA.appendChild(el(`<div class="cap">Granularity · <b>${p.label}</b> — ${p.caption}. Latest period highlighted; newest first.</div>`));
 
   const gridA=el(`<div class="grid-2"></div>`);
@@ -563,12 +605,9 @@ function render(){
 
   /* ===== SECTION B : initiatives ===== */
   const secB=el(`<section class="section"></section>`);
-  const headB=el(`<div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3>
-    <span class="hint">live status · roadblocks &amp; decisions · revenue plan vs actual</span><span class="spacer"></span></div>`);
-  const toggleB=el(`<div class="period" role="group" aria-label="Time granularity (initiatives)"></div>`);
-  Object.keys(PERIODS).forEach(k=>{const b=el(`<button data-period="${k}" aria-pressed="${state.period===k}">${PERIODS[k].label}</button>`);b.onclick=()=>{state.period=k;render();};toggleB.appendChild(b);});
-  headB.appendChild(toggleB); secB.appendChild(headB);
-  secB.appendChild(el(`<div class="cap">Revenue plan vs actual shown for · <b>${p.label}</b> (${p.head}). Initiative-level figures re-scale with the toggle.</div>`));
+  secB.appendChild(el(`<div class="section-head"><span class="tag">B</span><h3>Key AOP initiatives</h3>
+    <span class="hint">live status · roadblocks &amp; decisions · revenue plan vs actual</span></div>`));
+  secB.appendChild(el(`<div class="cap">Revenue plan vs actual shown for · <b>${p.label}</b> (${p.head}). Figures re-scale with the <b>View</b> selector at the top.</div>`));
   const cardB=el(`<div class="panel"></div>`);
   let tPlan=0, tAct=0;
   const rowsB=a.initiatives.map((i,idx)=>{
@@ -703,6 +742,19 @@ function syncSticky(){
 window.addEventListener("resize",syncSticky);
 window.addEventListener("load",syncSticky);
 setTimeout(syncSticky,400);
+
+const themeBtn=document.getElementById("themeBtn");
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.3 4.3l1.5 1.5M18.2 18.2l1.5 1.5M2.5 12h2M19.5 12h2M4.3 19.7l1.5-1.5M18.2 5.8l1.5-1.5"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.2A8 8 0 0 1 9.8 4 7 7 0 1 0 20 14.2Z"/></svg>';
+let lightTheme=true;
+function applyTheme(){
+  document.body.classList.toggle("light",lightTheme);
+  themeBtn.querySelector(".ti").innerHTML=lightTheme?MOON:SUN;
+  themeBtn.querySelector(".tl").textContent=lightTheme?"Dark":"Light";
+  syncSticky();
+}
+themeBtn.onclick=()=>{lightTheme=!lightTheme; applyTheme();};
+applyTheme();
 
 render();
 syncSticky();
